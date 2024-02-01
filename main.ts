@@ -12,7 +12,7 @@ const DEFAULT_SETTINGS: ObisidianKVSettings = {
 
 declare global {
 	interface Window {
-		obsidiankv: SharedStuff;
+		kv: SharedStuff;
 	}
 }
 
