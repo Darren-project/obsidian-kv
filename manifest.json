@@ -1,0 +1,11 @@
+{
+	"id": "obsidian-kv",
+	"name": "Obsidian KV",
+	"version": "1.0.0",
+	"minAppVersion": "0.15.0",
+	"description": "Adds a key-value store to Obsidian. Use it to store and retrieve key-value pairs in your vault.",
+	"author": "Darren-project",
+	"authorUrl": "https://github.com/Darren-project/",
+	"fundingUrl": "",
+	"isDesktopOnly": false
+}
