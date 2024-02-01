@@ -7,7 +7,7 @@ This plugin adds a key-value store to Obsidian, allowing you to store and retrie
 1. Open Obsidian.
 2. Go to `Settings > Third-party plugin`.
 3. Make sure `Safe mode` is off.
-4. Click `Browse` and search for "Obsidian KV".
+4. Click `Browse` and search for "KV Store".
 5. Click `Install`.
 6. Once installed, toggle the switch to enable the plugin.
 
@@ -15,7 +15,7 @@ This plugin adds a key-value store to Obsidian, allowing you to store and retrie
 
 Once the plugin is installed and enabled, you can access the key-value store from the settings page.
 
-1. Go to `Settings > Obsidian KV`.
+1. Go to `Settings > KV Store`.
 2. Here, you will see a textarea where you can view, add, modify, or delete your key-value data.
 
 The data should be in JSON format, like this:
@@ -62,19 +62,19 @@ After making changes, the plugin will automatically save your data. If your data
 
 ## JS Docs
 ```js
-obsidiankv.set(name: string, value: any)
+kv.set(name: string, value: any)
 
-obsidiankv.get(name: string)
+kv.get(name: string)
 
-obsidiankv.delete(name: string)
+kv.delete(name: string)
 
-obsidiankv.has(name: string)
+kv.has(name: string)
 
-obsidiankv.keys()
+kv.keys()
 
-obsidiankv.values()
+kv.values()
 
-obsidiankv.entries()
+kv.entries()
 ```
 
 ## Support
