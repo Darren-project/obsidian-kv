@@ -64,15 +64,15 @@ After making changes, the plugin will automatically save your data. If your data
 ```js
 obsidiankv.set(name: string, value: any)
 
-obsidiankv.get(name: string) {
+obsidiankv.get(name: string)
 
-obsidiankv.delete(name: string) {
+obsidiankv.delete(name: string)
 
-obsidiankv.has(name: string) {
+obsidiankv.has(name: string)
 
 obsidiankv.keys()
 
-obsidiankv.values() {
+obsidiankv.values()
 
 obsidiankv.entries()
 ```
