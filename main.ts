@@ -60,7 +60,7 @@ export default class ObisidianKV extends Plugin {
 	async onload() {
 		await this.loadSettings();
 		let this2 = this;
-		window.obsidiankv = new SharedStuff(this.settings.kvdata, this2);
+		window.kv = new SharedStuff(this.settings.kvdata, this2);
 
 		// This adds a settings tab so the user can configure various aspects of the plugin
 		this.addSettingTab(new ObisidianKVSettingTab(this.app, this));
@@ -103,7 +103,7 @@ class ObisidianKVSettingTab extends PluginSettingTab {
 				try {
 					this.plugin.settings.kvdata = JSON.parse(value);
 					await this.plugin.saveSettings();
-					window.obsidiankv = new SharedStuff(this.plugin.settings.kvdata, this.plugin);
+					window.kv = new SharedStuff(this.plugin.settings.kvdata, this.plugin);
 				} catch (error) {
 					new Notice('Invalid JSON: ' + error.message, 5000);
 				}
