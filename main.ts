@@ -23,41 +23,39 @@ declare global {
 }
 
 class SharedStuff {
-	#stuff: {[key: string]: any};
-	#this2: any;
     constructor(private stuff: {[key: string]: any;}, private this2: any) {
-		this.#stuff = stuff;
-		this.#this2 = this2;
+		this.stuff = stuff;
+		this.this2 = this2;
     }
 
     set(name: string, value: any) {
-        this.#stuff[name] = value;
-		this.#this2.saveSettings();
+        this.stuff[name] = value;
+		this.this2.saveSettings();
     }
 
     get(name: string) {
-        return this.#stuff[name];
+        return this.stuff[name];
     }
 
     delete(name: string) {
-        delete this.#stuff[name];
-		this.#this2.saveSettings();
+        delete this.stuff[name];
+		this.this2.saveSettings();
     }
 
     has(name: string) {
-        return this.#stuff.hasOwnProperty(name);
+        return this.stuff.hasOwnProperty(name);
     }
 
     keys() {
-        return Object.keys(this.#stuff);
+        return Object.keys(this.stuff);
     }
 
     values() {
-        return Object.values(this.#stuff);
+        return Object.values(this.stuff);
     }
 
     entries() {
-        return Object.entries(this.#stuff);
+        return Object.entries(this.stuff);
     }
 }
 
@@ -78,16 +76,18 @@ export default class ObisidianKV extends Plugin {
 
 			let updateinterval = setInterval(async () => {
 				let currentdata = this.settings.kvdata
-				await this.loadSettings();
-				if(JSON.stringify(this.settings.kvdata) == JSON.stringify(currentdata)) {
+				let newkvdata = Object.assign({}, DEFAULT_SETTINGS, await this.loadData());
+				if(JSON.stringify(newkvdata.kvdata) == JSON.stringify(currentdata)) {
 					return;
 				} else {
+					await this.loadSettings();
 					window.kv = new SharedStuff(this.settings.kvdata, this2);
 					console.log("[ " + this.manifest.id +" ] Updated kv data");
 				}
 			}, 1000);
 
 			this.privatekv.set("updateinterval", updateinterval);
+			//clearInterval(this.privatekv.get("updateinterval"));
 
 
 			
