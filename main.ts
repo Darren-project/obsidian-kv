@@ -1,4 +1,4 @@
-import { App, Editor, MarkdownView, Modal, Notice, Plugin, PluginSettingTab, Setting } from 'obsidian';
+import { App, Editor, MarkdownView, Modal, Notice, Plugin, PluginSettingTab, Setting, PluginManifest } from 'obsidian';
 
 // Remember to rename these classes and interfaces!
 
@@ -14,70 +14,97 @@ declare global {
 	interface Window {
 		kv: SharedStuff;
 	}
+
+	interface ObisidianKV {
+		settings: ObisidianKVSettings;
+		loadSettings(): Promise<void>;
+		saveSettings(): Promise<void>;
+	}
 }
 
 class SharedStuff {
+	#stuff: {[key: string]: any};
+	#this2: any;
     constructor(private stuff: {[key: string]: any;}, private this2: any) {
-        this.stuff = stuff;
-		this.this2 = this2;
+		this.#stuff = stuff;
+		this.#this2 = this2;
     }
 
     set(name: string, value: any) {
-        this.stuff[name] = value;
-		this.this2.saveSettings();
+        this.#stuff[name] = value;
+		this.#this2.saveSettings();
     }
 
     get(name: string) {
-        return this.stuff[name];
+        return this.#stuff[name];
     }
 
     delete(name: string) {
-        delete this.stuff[name];
-		this.this2.saveSettings();
+        delete this.#stuff[name];
+		this.#this2.saveSettings();
     }
 
     has(name: string) {
-        return this.stuff.hasOwnProperty(name);
+        return this.#stuff.hasOwnProperty(name);
     }
 
     keys() {
-        return Object.keys(this.stuff);
+        return Object.keys(this.#stuff);
     }
 
     values() {
-        return Object.values(this.stuff);
+        return Object.values(this.#stuff);
     }
 
     entries() {
-        return Object.entries(this.stuff);
+        return Object.entries(this.#stuff);
     }
 }
 
 
 export default class ObisidianKV extends Plugin {
-	settings: ObisidianKVSettings;
+	settings: ObisidianKVSettings
+	privatekv: SharedStuff
+	manifest: PluginManifest
 
 	async onload() {
 		await this.loadSettings();
 		let this2 = this;
 		window.kv = new SharedStuff(this.settings.kvdata, this2);
+		this.privatekv = new SharedStuff({}, this2);
 
 		// This adds a settings tab so the user can configure various aspects of the plugin
-		this.addSettingTab(new ObisidianKVSettingTab(this.app, this));
+			this.addSettingTab(new ObisidianKVSettingTab(this.app, this));
 
+			let updateinterval = setInterval(async () => {
+				let currentdata = this.settings.kvdata
+				await this.loadSettings();
+				if(JSON.stringify(this.settings.kvdata) == JSON.stringify(currentdata)) {
+					return;
+				} else {
+					window.kv = new SharedStuff(this.settings.kvdata, this2);
+					console.log("[ " + this.manifest.id +" ] Updated kv data");
+				}
+			}, 1000);
+
+			this.privatekv.set("updateinterval", updateinterval);
+
+
+			
+
+		}
+
+		onunload() {
+			clearInterval(this.privatekv.get("updateinterval"));
+		}
+
+		async loadSettings() {
+			this.settings = Object.assign({}, DEFAULT_SETTINGS, await this.loadData());
 	}
 
-	onunload() {
-
-	}
-
-	async loadSettings() {
-		this.settings = Object.assign({}, DEFAULT_SETTINGS, await this.loadData());
-	}
-
-	async saveSettings() {
-		await this.saveData(this.settings);
-	}
+		async saveSettings() {
+			await this.saveData(this.settings);
+		}
 }
 
 
