@@ -19,9 +19,10 @@
 		"esbuild": "0.17.3",
 		"typescript": "4.7.4"
 	},
+	"ignoreForNow": {},
 	"dependencies": {
-		"@fingerprintjs/fingerprintjs": "^4.2.2",
 		"obsidian": "^1.4.11",
-		"tslib": "^2.6.2"
+		"tslib": "^2.6.2",
+		"@fingerprintjs/fingerprintjs": "^4.2.2"
 	}
 }
