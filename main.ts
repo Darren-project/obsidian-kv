@@ -1,3 +1,4 @@
+import { on } from 'events';
 import { debounce, App, Editor, MarkdownView, Modal, Notice, Plugin, PluginSettingTab, Setting, PluginManifest } from 'obsidian';
 
 
@@ -92,21 +93,20 @@ export default class ObisidianKV extends Plugin {
 	socket: WebSocket
 	lastupdate: number
 	onExternalSettingsChange: any
+	online: any
+	offline: any
 
 	async onload() {
 		await this.loadSettings();
-		let reloadexternalupdate = debounce(async  () => {
+		async function onExternalSettingsChange(this: any) {
 			console.log("[ " + this.manifest.id + " ] Config file changed");
 			let data = await this.loadSettings()
 			window.kv = new SharedStuff(data.kvdata, this);
-		},
-    	500,
-        true)
-		this.onExternalSettingsChange = async () => {
-			await reloadexternalupdate();
+			
 		}
-		let this2 = this;
-		window.kv = new SharedStuff(this.settings.kvdata, this2);
+		this.onExternalSettingsChange = () => onExternalSettingsChange.call(this);
+		
+		window.kv = new SharedStuff(this.settings.kvdata, this);
 
 		// This adds a settings tab so the user can configure various aspects of the plugin
 			this.addSettingTab(new ObisidianKVSettingTab(this.app, this));
@@ -148,19 +148,23 @@ export default class ObisidianKV extends Plugin {
 				}
 			  }
 			  
-			  window.addEventListener("online", () => {
+			  this.online = () => {
 				console.log("[ " + this.manifest.id + " ] " +  "User came online");
 				connect();
-			  });
-			  
-			  window.addEventListener("offline", () => {
+			  }
+
+			  this.offline = () => {
 				console.log("[ " + this.manifest.id + " ] " +  "User is offline");
 				if (this.socket) {
 				  this.socket.close();
 				  (this.socket as any) = null;
 				}
 				// Inform the user, handle reconnection or other scenarios
-			  });
+			  }
+
+			  window.addEventListener("online", this.online);
+			  
+			  window.addEventListener("offline", this.offline);
 			
 		
 		}
@@ -168,6 +172,8 @@ export default class ObisidianKV extends Plugin {
 		onunload() {
 			(window.kv as any) = null;
 			this.socket.close();
+			window.removeEventListener("online", this.online);
+			window.removeEventListener("offline", this.offline);
 		}
 
 		async loadSettings() {
