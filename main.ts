@@ -92,20 +92,39 @@ export default class ObisidianKV extends Plugin {
 	manifest: PluginManifest
 	socket: WebSocket
 	lastupdate: number
-	onExternalSettingsChange: any
 	online: any
 	offline: any
+	injectexterchnage: any
+
+	constructor(app: App, manifest: PluginManifest) {
+		super(app, manifest);
+		this.manifest = manifest;
+		this.app = app;
+		
+	}
+
+	async handleConfigFileChange() {
+        //await super.handleConfigFileChange();
+        this.onExternalSettingsChange();
+    }
+
+	public onExternalSettingsChange = debounce(
+        async () => {
+            await this.loadSettings();
+            console.log("[ " + this.manifest.id + " ]  - External Settings Reloaded");
+			window.kv = new SharedStuff(this.settings.kvdata, this);
+		},
+        500,
+        true
+    );
+
 
 	async onload() {
 		await this.loadSettings();
-		async function onExternalSettingsChange(this: any) {
-			console.log("[ " + this.manifest.id + " ] Config file changed");
-			let data = await this.loadSettings()
-			window.kv = new SharedStuff(data.kvdata, this);
-			
-		}
-		this.onExternalSettingsChange = () => onExternalSettingsChange.call(this);
+
 		
+		
+
 		window.kv = new SharedStuff(this.settings.kvdata, this);
 
 		// This adds a settings tab so the user can configure various aspects of the plugin
