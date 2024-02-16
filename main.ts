@@ -1,15 +1,16 @@
-import { App, Editor, MarkdownView, Modal, Notice, Plugin, PluginSettingTab, Setting, PluginManifest } from 'obsidian';
+import { debounce, App, Editor, MarkdownView, Modal, Notice, Plugin, PluginSettingTab, Setting, PluginManifest } from 'obsidian';
 
-// Remember to rename these classes and interfaces!
 
 interface ObisidianKVSettings {
 	kvdata: Object;
 	serverurl: string;
+	lastmessage: Object;
 }
 
 const DEFAULT_SETTINGS: ObisidianKVSettings = {
 	kvdata: {},
 	serverurl: "",
+	lastmessage: {}
 }
 
 declare global {
@@ -38,12 +39,12 @@ class SharedStuff {
 
     set(name: string, value: any) {
 		try {
-		if(this.this2.lastupdate == undefined) {
-		this.this2.lastupdate = Date.now();
-		this.this2.socket.send(JSON.stringify({type: "set", key: name, update: this.this2.lastupdate, value: value}));
+		if(this.this2.lastupdate) {
+			this.this2.lastupdate = undefined
 		} else {
-		this.this2.lastupdate = undefined
-		}
+			this.this2.lastupdate = Date.now();
+			this.this2.socket.send(JSON.stringify({type: "set", key: name, update: this.this2.lastupdate, value: value}));
+		}	
 	} catch (error) {}
         this.stuff[name] = value;
 		this.this2.saveSettings();
@@ -55,11 +56,11 @@ class SharedStuff {
 
     delete(name: string) {
 		try {
-		if(this.this2.lastupdate == undefined) {
+		if(this.this2.lastupdate) {
+			this.this2.lastupdate = undefined
+		} else {
 		this.this2.lastupdate = Date.now();
 		this.this2.socket.send(JSON.stringify({type: "delete", key: name, update: this.this2.lastupdate}));
-	} else {
-		this.this2.lastupdate = undefined
 		}
 	} catch (error) {}
         delete this.stuff[name];
@@ -90,9 +91,20 @@ export default class ObisidianKV extends Plugin {
 	manifest: PluginManifest
 	socket: WebSocket
 	lastupdate: number
+	onExternalSettingsChange: any
 
 	async onload() {
 		await this.loadSettings();
+		let reloadexternalupdate = debounce(async  () => {
+			console.log("[ " + this.manifest.id + " ] Config file changed");
+			let data = await this.loadSettings()
+			window.kv = new SharedStuff(data.kvdata, this);
+		},
+    	500,
+        true)
+		this.onExternalSettingsChange = async () => {
+			await reloadexternalupdate();
+		}
 		let this2 = this;
 		window.kv = new SharedStuff(this.settings.kvdata, this2);
 
@@ -104,37 +116,52 @@ export default class ObisidianKV extends Plugin {
 			} else {}
 			this.socket.onmessage = (event) => {
 				let data = JSON.parse(event.data);
+				if(!(this.settings.lastmessage = data)) {
+				this.settings.lastmessage = data
 				if (data.update == this.lastupdate) {
-					return
+				  return;
 				}
 				if (data.type == "set") {
-					window.kv.set(data.key, data.value);
+				  window.kv.set(data.key, data.value);
 				} else if (data.type == "delete") {
-					window.kv.delete(data.key);
+				  window.kv.delete(data.key);
 				}
+		}
 	
 				
 	
 			}
-		}
+			}
 
 			
-			function attemptWssInit(delay = 1000) {
-				try {
-					wssinit();
-				} catch (error) {
-					setTimeout(() => {
-						attemptWssInit(delay);
-					}, delay);
-				}
-			}
+			
 			
 			// Start the first attempt
-			attemptWssInit();
-			this.socket.onclose = () => {
-				console.log('WebSocket disconnected, attempting to reconnect...');
-				attemptWssInit();
-			};
+			wssinit();
+
+			let connect = () => {
+				if (window.navigator.onLine) {
+				  wssinit()
+				} else {
+				  console.log("[ " + this.manifest.id + " ] " +  "User is offline");
+				  connect();
+				}
+			  }
+			  
+			  window.addEventListener("online", () => {
+				console.log("[ " + this.manifest.id + " ] " +  "User came online");
+				connect();
+			  });
+			  
+			  window.addEventListener("offline", () => {
+				console.log("[ " + this.manifest.id + " ] " +  "User is offline");
+				if (this.socket) {
+				  this.socket.close();
+				  (this.socket as any) = null;
+				}
+				// Inform the user, handle reconnection or other scenarios
+			  });
+			
 		
 		}
 
@@ -150,10 +177,6 @@ export default class ObisidianKV extends Plugin {
 
 		async saveSettings() {
 			await this.saveData(this.settings);
-		}
-
-		onConfigFileChange(): void {
-			console.log("Config file changed");
 		}
 }
 
@@ -196,8 +219,11 @@ class ObisidianKVSettingTab extends PluginSettingTab {
 			.onChange(async (value) => {
 				this.plugin.settings.serverurl = value;
 				await this.plugin.saveSettings();
+				try {
+					this.plugin.socket.close()
+				} catch {}
 				this.plugin.socket = new WebSocket(this.plugin.settings.serverurl);
-			}));
+			  }));
 		
 	}
 }
