@@ -77,6 +77,9 @@ kv.values()
 kv.entries()
 ```
 
+## The server URL
+The server is used to transmit kv updates to other clients
+
 ## Support
 
 If you encounter any issues or have any questions about this plugin, please open an issue on the GitHub repository.
