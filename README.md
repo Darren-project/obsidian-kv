@@ -79,6 +79,7 @@ kv.entries()
 
 ## The server URL
 The server is used to transmit kv updates to other clients
+The Server can be found on the repo [linked](https://github.com/Darren-project/obsidian-kv-wss.git).
 
 ## Support
 
