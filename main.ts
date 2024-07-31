@@ -395,7 +395,7 @@ class ObisidianKVSettingTab extends PluginSettingTab {
 					await this.plugin.saveSettings();
 					window.kv = new SharedStuff(this.plugin.settings.kvdata, this.plugin);
 				} catch (error) {
-					new Notice('Invalid JSON: ' + error.message, 5000);
+					new Notice('Invalid JSON: ' + error.message, 1000);
 				}
 			}
 		});
