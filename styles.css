@@ -6,3 +6,12 @@ available in the app when your plugin is enabled.
 If your plugin does not need CSS, delete this file.
 
 */
+
+.kv-store-json-editor-css .cm-scroller {
+    flex-direction: unset;
+}
+
+.kv-store-json-editor-css .setting-item-control {
+    text-align: unset;
+}
+
