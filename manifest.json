@@ -1,7 +1,7 @@
 {
 	"id": "kv-store",
 	"name": "KV Store",
-	"version": "1.1.0",
+	"version": "1.1.1",
 	"minAppVersion": "0.15.0",
 	"description": "Adds a key-value store. Use it to store and retrieve key-value pairs in your vault.",
 	"author": "Darren-project",

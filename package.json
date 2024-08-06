@@ -29,6 +29,6 @@
 		"@fingerprintjs/fingerprintjs": "^4.2.2",
 		"esbuild-plugin-inline-import": "^1.1.0",
 		"obsidian": "^1.4.11",
-		"tslib": "^2.6.2"
+		"tslib": "^2.6.3"
 	}
 }

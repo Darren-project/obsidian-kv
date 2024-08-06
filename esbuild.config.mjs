@@ -44,7 +44,7 @@ const args = {
 		"@lezer/highlight",
 		...builtins],
 	format: "cjs",
-	target: "es2016",
+	target: "es2017",
 	logLevel: "info",
 	sourcemap: prod ? false : "inline",
 	treeShaking: true,

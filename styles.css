@@ -13,5 +13,10 @@ If your plugin does not need CSS, delete this file.
 
 .kv-store-json-editor-css .setting-item-control {
     text-align: unset;
+    justify-content: unset;
 }
 
+
+.setting-item.kv-store-json-editor-css {
+    display: unset;
+}

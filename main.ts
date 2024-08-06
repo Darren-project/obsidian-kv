@@ -16,6 +16,7 @@ import { lintKeymap } from "@codemirror/lint";
 import { EditorView, ViewUpdate } from "@codemirror/view";
 import { debounce, App, Editor, MarkdownView, Modal, Notice, Plugin, PluginSettingTab, Setting, PluginManifest } from 'obsidian';
 import { tags as t } from "@lezer/highlight";
+import { error } from "console";
 
 const config = {
 	name: "obsidian",
@@ -222,6 +223,7 @@ export default class ObisidianKV extends Plugin {
 	online: any
 	offline: any
 	injectexterchnage: any
+	app: App
 
 	constructor(app: App, manifest: PluginManifest) {
 		super(app, manifest);
@@ -366,7 +368,7 @@ class ObisidianKVSettingTab extends PluginSettingTab {
 		dropCursor(),
 		EditorState.allowMultipleSelections.of(true),
 		indentOnInput(),
-		indentUnit.of("    "),
+		indentUnit.of("  "),
 		syntaxHighlighting(defaultHighlightStyle, { fallback: true }),
 		EditorView.lineWrapping,
 		bracketMatching(),
@@ -387,6 +389,15 @@ class ObisidianKVSettingTab extends PluginSettingTab {
 	createJSONEditor(snippetsSetting: Setting) {
 		const container = snippetsSetting.controlEl.createDiv("kv-store-json-editor");
 
+		const errorpane = container.createDiv("kv-store-json-editor-error");
+		errorpane.style.color = "green";
+		errorpane.style.fontWeight = "bold"
+		errorpane.style.paddingBottom = "10px";
+
+		let greenmessage = "No errors found!"
+
+		errorpane.setText(greenmessage);
+
 		const change = EditorView.updateListener.of(async (v: ViewUpdate) => {
 			if (v.docChanged) {
 				const value = v.state.doc.toString();
@@ -394,8 +405,11 @@ class ObisidianKVSettingTab extends PluginSettingTab {
 					this.plugin.settings.kvdata = JSON.parse(value);
 					await this.plugin.saveSettings();
 					window.kv = new SharedStuff(this.plugin.settings.kvdata, this.plugin);
+					errorpane.style.color = "green";
+					errorpane.setText(greenmessage);
 				} catch (error) {
-					new Notice('Invalid JSON: ' + error.message, 1000);
+					errorpane.style.color = "red";
+					errorpane.setText(error.message);
 				}
 			}
 		});
@@ -405,7 +419,13 @@ class ObisidianKVSettingTab extends PluginSettingTab {
 		extensions.push(change);
 
 		this.snippetsEditor = this.createJSONCMEditor(JSON.stringify(this.plugin.settings.kvdata, null, 2), extensions);
+		let blankbr = document.createElement("br");
+
+		container.appendChild(errorpane);
+		container.appendChild(blankbr);
+		container.appendChild(blankbr);
 		container.appendChild(this.snippetsEditor.dom);
+		container.appendChild(blankbr);
 
 	}
 
