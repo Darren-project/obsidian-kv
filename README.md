@@ -62,7 +62,11 @@ After making changes, the plugin will automatically save your data. If your data
 
 ## JS Docs
 ```js
-kv.set(name: string, value: any)
+kv.set(name: string, value: any, position: number)
+
+// Position is from 0 to the last item number -1
+// If your object has 7 keys, the last item number is 6
+// Maximum limit is last object
 
 kv.get(name: string)
 
@@ -76,10 +80,6 @@ kv.values()
 
 kv.entries()
 ```
-
-## The server URL
-The server is used to transmit kv updates to other clients
-The Server can be found on the repo [linked](https://github.com/Darren-project/obsidian-kv-wss.git).
 
 ## Support
 
