@@ -162,9 +162,46 @@ class SharedStuff {
 		return window.kv;
 	}
 
-    set(name: string, value: any) {
-        this.stuff[name] = value;
-		this.this2.saveSettings();
+    set(name: string, value: any, position?: number) {
+		if (position == undefined) {
+			this.stuff[name] = value;
+			this.this2.saveSettings();
+		} else {
+			if (position < 0) {
+				throw new Error("Position cannot be negative");
+			}
+
+			if (position > this.keys().length-1) {
+				throw new Error("Position cannot be greater than the length of the object");
+			}
+			
+			let current = 0;
+			let oldstuff = JSON.parse(JSON.stringify(this.stuff));
+			let temp = []
+			let newstuff = {} as {[key: string]: any;};
+
+			if (oldstuff.hasOwnProperty(name)) {
+				delete oldstuff[name];
+			}
+
+			for (let key in oldstuff) {
+				if (current == position) {
+					temp.push(name);
+				}
+				temp.push(key);
+				current += 1;
+			}
+
+			for (let key in temp) {
+				if (temp[key] == name) {
+					newstuff[temp[key]] = value;
+				} else {
+					newstuff[temp[key]] = oldstuff[temp[key]];
+				}
+			}
+			
+			this.this2.saveExtremeChangesToKV(newstuff);
+		}
     }
 
     get(name: string) {
@@ -198,11 +235,6 @@ export default class ObisidianKV extends Plugin {
 	settings: ObisidianKVSettings
 	privatekv: SharedStuff
 	manifest: PluginManifest
-	socket: WebSocket
-	lastupdate: number
-	online: any
-	offline: any
-	injectexterchnage: any
 	app: App
 
 	constructor(app: App, manifest: PluginManifest) {
@@ -244,6 +276,12 @@ export default class ObisidianKV extends Plugin {
 
 		async saveSettings() {
 			await this.saveData(this.settings);
+		}
+
+		async saveExtremeChangesToKV(data: any) {
+			this.settings.kvdata = JSON.parse(JSON.stringify(data));
+			await this.saveSettings();
+			window.kv = new SharedStuff(this.settings.kvdata, this);
 		}
 }
 
