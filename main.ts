@@ -132,14 +132,10 @@ const obsidian: Extension = [
 
 interface ObisidianKVSettings {
 	kvdata: Object;
-	serverurl: string;
-	lastmessage: Object;
 }
 
 const DEFAULT_SETTINGS: ObisidianKVSettings = {
 	kvdata: {},
-	serverurl: "",
-	lastmessage: {}
 }
 
 declare global {
@@ -167,14 +163,6 @@ class SharedStuff {
 	}
 
     set(name: string, value: any) {
-		try {
-		if(this.this2.lastupdate) {
-			this.this2.lastupdate = undefined
-		} else {
-			this.this2.lastupdate = Date.now();
-			this.this2.socket.send(JSON.stringify({type: "set", key: name, update: this.this2.lastupdate, value: value}));
-		}	
-	} catch (error) {}
         this.stuff[name] = value;
 		this.this2.saveSettings();
     }
@@ -184,14 +172,6 @@ class SharedStuff {
     }
 
     delete(name: string) {
-		try {
-		if(this.this2.lastupdate) {
-			this.this2.lastupdate = undefined
-		} else {
-		this.this2.lastupdate = Date.now();
-		this.this2.socket.send(JSON.stringify({type: "delete", key: name, update: this.this2.lastupdate}));
-		}
-	} catch (error) {}
         delete this.stuff[name];
 		this.this2.saveSettings();
     }
@@ -233,7 +213,6 @@ export default class ObisidianKV extends Plugin {
 	}
 
 	async handleConfigFileChange() {
-        //await super.handleConfigFileChange();
         this.onExternalSettingsChange();
     }
 
@@ -250,82 +229,12 @@ export default class ObisidianKV extends Plugin {
 
 	async onload() {
 		await this.loadSettings();
-
-		
-		
-
 		window.kv = new SharedStuff(this.settings.kvdata, this);
-
-		// This adds a settings tab so the user can configure various aspects of the plugin
-			this.addSettingTab(new ObisidianKVSettingTab(this.app, this));
-			let wssinit = () => {
-			if (!(this.settings.serverurl == '')) {
-				this.socket = new WebSocket(this.settings.serverurl);
-			} else {}
-			try {
-			this.socket.onmessage = (event) => {
-				let data = JSON.parse(event.data);
-				if(!(this.settings.lastmessage = data)) {
-				this.settings.lastmessage = data
-				if (data.update == this.lastupdate) {
-				  return;
-				}
-				if (data.type == "set") {
-				  window.kv.set(data.key, data.value);
-				} else if (data.type == "delete") {
-				  window.kv.delete(data.key);
-				}
-		}
-	
-				
-	
-			}
-		} catch {}
-
-			
-			
-			
-			// Start the first attempt
-			wssinit();
-
-			let connect = () => {
-				if (window.navigator.onLine) {
-				  wssinit()
-				} else {
-				  console.log("[ " + this.manifest.id + " ] " +  "User is offline");
-				  connect();
-				}
-			  }
-			  
-			  this.online = () => {
-				console.log("[ " + this.manifest.id + " ] " +  "User came online");
-				connect();
-			  }
-
-			  this.offline = () => {
-				console.log("[ " + this.manifest.id + " ] " +  "User is offline");
-				if (this.socket) {
-				  this.socket.close();
-				  (this.socket as any) = null;
-				}
-				// Inform the user, handle reconnection or other scenarios
-			  }
-
-			  window.addEventListener("online", this.online);
-			  
-			  window.addEventListener("offline", this.offline);
-			
-		
-		}
+        this.addSettingTab(new ObisidianKVSettingTab(this.app, this));
 	}
 
 		onunload() {
 			(window.kv as any) = null;
-			try {
-			this.socket.close();
-			} catch {}
-			window.removeEventListener("online", this.online);
-			window.removeEventListener("offline", this.offline);
 		}
 
 		async loadSettings() {
@@ -444,21 +353,6 @@ class ObisidianKVSettingTab extends PluginSettingTab {
         
         
 		this.createJSONEditor(snippeteditor);
-
-		new Setting(containerEl)
-		.setName('Server URL')
-		.setDesc('This is the URL of the server to connect to. If you leave it blank, it will not connect to a server.')
-		.addText(text => text
-			.setPlaceholder('ws://localhost:8080')
-			.setValue(this.plugin.settings.serverurl)
-			.onChange(async (value) => {
-				this.plugin.settings.serverurl = value;
-				await this.plugin.saveSettings();
-				try {
-					this.plugin.socket.close()
-				} catch {}
-				this.plugin.socket = new WebSocket(this.plugin.settings.serverurl);
-			  }));
 		
 	}
 }
